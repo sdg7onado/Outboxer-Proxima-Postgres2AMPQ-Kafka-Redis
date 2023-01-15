@@ -4,6 +4,8 @@ This service allows to implement the [transactional outbox pattern](https://micr
 It reads the changes from an outbox table in a PostgreSQL database using [debezium](https://debezium.io) and publishes 
 the events to RabbitMQ.
 
+This fork will also attempt to pulblishes events to a Redis client.
+
 ## Usage
 Outboxer runs inside a docker container. You can build the docker image from the `Dockerfile` located in the root 
 directory.
@@ -15,22 +17,36 @@ As a running PostgreSQL and RabbitMQ instance is needed, it is best to use docke
 Outboxer can either be configured via a `outboxer.properties` file or via environment variables. The following 
 properties are supported:
 
+**Database Properties**
 - `database.hostname` The database host name
 - `database.port` The database port
 - `database.user` The database username
 - `database.password` The database password
 - `database.dbname` The database name
 - `database.server.name` The unique name that identifies this debezium PostgreSQL connector
-- `table.include.list` The name of the outbox table
+
+**Schema Properties**
+- `schema.include.list` An optional, comma-separated list of regular expressions that match names of schemas for which you want to capture changes. [Debezium Documentation](https://debezium.io/documentation/reference/stable/connectors/postgresql.html#postgresql-property-schema-include-list) 
+
+**Table Properties**
+- `table.include.list` An optional, comma-separated list of regular expressions that match fully-qualified table identifiers for tables whose changes you want to capture. [Debezium Documentation:](https://debezium.io/documentation/reference/stable/connectors/postgresql.html#postgresql-property-table-include-list)
+
+**Offset Properties**
+- `offset.storage` The name of the Java class that is responsible for persistence of connector offsets. It must implement <…​>.OffsetBackingStore interface.
 - `offset.storage.file.filename` The file where outboxer should store its current offset. The offset is a location in 
   Postgres write-ahead log. Debezium uses this offset to track which records have been processed. After a restart 
   outboxer uses the stored offset as the resume point where to start processing records. If outboxer runs inside a 
   container, this file should be storage outside the container (for example in a docker volume). This ensures that the
-  file does survive container restarts.
+  file does survive container restarts. Path to file where offsets are to be stored. Required when offset.storage is set to the <…​>.FileOffsetBackingStore.
+- `offset.flush.interval.ms` Interval at which to try committing offsets. The default is 1 minute.
+
+**Publsher Properties**
 - `publisher.amqp.url` The url to the AMQP broker
 - `publisher.amqp.exchange` The AMQP exchange on which the events should be published.
 - `publisher.amqp.retries` How often a failed event publication should be retried
 - `publisher.amqp.retry.delay` The delay before performing retry
+
+**Transformer Properties**
 - `transforms.outbox.table.field.event.id` The name of the column containing the unique event id
 - `transforms.outbox.table.field.event.routing_key` The name of the column containing the event routing key
 - `transforms.outbox.table.field.event.payload` The name of the column containing the event payload
