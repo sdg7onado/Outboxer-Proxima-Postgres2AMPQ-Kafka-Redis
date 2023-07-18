@@ -13,11 +13,11 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class Outboxer {
-  private static final String DEFAULT_CONFIG_FILE = "/outboxer.properties";
-  private static final String ENV_VAR_PREFIX = "outboxer.";
-  private static final String STOP_TIMEOUT_MS_KEY = "stop.timeout.ms";
-  private static final String START_RETRY_COUNT_KEY = "start.retry.count";
-  private static final String START_RETRY_DELAY_MS_KEY = "start.retry.delay.ms";
+  private static final String DEFAULT_CONFIG_FILE       = "/outboxer.properties";
+  private static final String ENV_VAR_PREFIX            = "outboxer.";
+  private static final String STOP_TIMEOUT_MS_KEY       = "stop.timeout.ms";
+  private static final String START_RETRY_COUNT_KEY     = "start.retry.count";
+  private static final String START_RETRY_DELAY_MS_KEY  = "start.retry.delay.ms";
 
   private Configuration config;
   private EmbeddedEngine engine;

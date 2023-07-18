@@ -95,6 +95,7 @@ public class OutboxTableTransform<R extends ConnectRecord<R>> implements Transfo
     if (!smtManager.isValidEnvelope(record)) {
       log.debug("Ignoring non CDC event with key: {}", record.key());
       return true;
+    }
 
     var debeziumEventValue = requireStruct(record.value(), "Detect Debezium Operation");
     var operation = Envelope.Operation.forCode(debeziumEventValue.getString(Envelope.FieldName.OPERATION));

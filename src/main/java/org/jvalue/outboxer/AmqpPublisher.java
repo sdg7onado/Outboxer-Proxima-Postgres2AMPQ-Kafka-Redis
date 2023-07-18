@@ -67,7 +67,12 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
     var eventId = (String) record.key();
     var payload = (String) record.value();
 
-    log.info("Publishing event {} with routingKey {}", eventId, routingKey);
+    log.info("Publishing event {} with routingKey {} and payload {}", eventId, routingKey, payload);    
+    
+    //Display payload
+    // log.info("***START PRINTING PAYLOAD***","");
+    // log.info("PAYLOAD =>",payload);
+    // log.info("***END PRINTING PAYLOAD***","");
 
     var message = createAmqpMessage(eventId, payload);
 
