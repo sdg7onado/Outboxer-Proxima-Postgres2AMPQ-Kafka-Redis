@@ -47,9 +47,12 @@ properties are supported:
 - `publisher.amqp.retry.delay` The delay before performing retry
 
 **Transformer Properties**
-- `transforms.outbox.table.field.event.id` The name of the column containing the unique event id
+- `transforms.outbox.table.field.event.Id` The name of the column containing the unique event id
 - `transforms.outbox.table.field.event.routing_key` The name of the column containing the event routing key
-- `transforms.outbox.table.field.event.payload` The name of the column containing the event payload
+- `transforms.outbox.table.field.event.AggregagteId` The name of the column containing the AggregateName and Id
+- `transforms.outbox.table.field.event.EventName` The name of the column containing the EventName
+- `transforms.outbox.table.field.event.Payload` The name of the column containing the event payload
+- `transforms.outbox.table.field.event.CreateDate` The name of the column containing the event CreateDate
 
 Note: all properties can also be passed via environment variables, but they must be prefixed with `outboxer.` and can be
 written in `UPPER_UNDERSCORE` format (e.g. `OUTBOXER_DATABASE_HOSTNAME`).

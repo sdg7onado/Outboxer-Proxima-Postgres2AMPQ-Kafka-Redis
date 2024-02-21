@@ -10,6 +10,7 @@ import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.transforms.ExtractField;
 import org.apache.kafka.connect.transforms.Transformation;
 
+import java.time.Instant;
 import java.util.Map;
 
 import static org.apache.kafka.connect.transforms.util.Requirements.requireStruct;
@@ -24,8 +25,12 @@ public class OutboxTableTransform<R extends ConnectRecord<R>> implements Transfo
   private final ExtractField<R> afterFieldExtractor = new ExtractField.Value<>();
 
   private String fieldEventId;
-  private String fieldEventRoutingKey;
+  private String fieldEventAggregateName;
+  private String fieldEventAggregateId;
+  private String fieldEventEventName;
   private String fieldEventPayload;
+  private String fieldEventCreateDate;
+  private String fieldEventLastEditDate;
 
   private SmtManager<R> smtManager;
 
@@ -44,21 +49,52 @@ public class OutboxTableTransform<R extends ConnectRecord<R>> implements Transfo
       throw new ConnectException(String.format("Unable to find ID field %s in event", fieldEventId));
     }
 
-    var routingKeyField = eventValueSchema.field(fieldEventRoutingKey);
-    if (routingKeyField == null) {
-      throw new ConnectException(String.format("Unable to find routing_key field %s in event", fieldEventRoutingKey));
+    var aggregateNameField = eventValueSchema.field(fieldEventAggregateName);
+    if (aggregateNameField == null) {
+      throw new ConnectException(String.format("Unable to find AggregateName field %s in event",
+          fieldEventAggregateName));
+    }
+
+    var aggregateIdField = eventValueSchema.field(fieldEventAggregateId);
+    if (aggregateIdField == null) {
+      throw new ConnectException(String.format("Unable to find AggregateId field %s in event", fieldEventAggregateId));
+    }
+
+    var eventNameField = eventValueSchema.field(fieldEventEventName);
+    if (eventNameField == null) {
+      throw new ConnectException(String.format("Unable to find EventName field %s in event", fieldEventEventName));
     }
 
     var payloadField = eventValueSchema.field(fieldEventPayload);
     if (payloadField == null) {
-      throw new ConnectException(String.format("Unable to find payload field %s in event", fieldEventPayload));
+      throw new ConnectException(String.format("Unable to find Payload field %s in event", fieldEventPayload));
     }
 
-    var id = eventStruct.get(fieldEventId);
-    var routingKey = eventStruct.getString(fieldEventRoutingKey);
-    var payload = eventStruct.get(fieldEventPayload);
+    var createDateField = eventValueSchema.field(fieldEventCreateDate);
+    if (createDateField == null) {
+      throw new ConnectException(String.format("Unable to find CreateDate field %s in event", fieldEventCreateDate));
+    }
 
-    return record.newRecord(routingKey, null, idField.schema(), id, payloadField.schema(), payload, null);
+    var lastEditDateField = eventValueSchema.field(fieldEventPayload);
+    if (lastEditDateField == null) {
+      throw new ConnectException(String.format("Unable to find payload field %s in event", fieldEventLastEditDate));
+    }
+
+    var id            = eventStruct.get(fieldEventId);
+    var routingKey    = eventStruct.getString(fieldEventAggregateName);
+    var aggregateId   = eventStruct.get(fieldEventAggregateId);
+    var eventName     = eventStruct.getString(fieldEventEventName);
+    var payload       = eventStruct.get(fieldEventPayload);
+    var createDate    = eventStruct.getString(fieldEventCreateDate);
+    var lastEditDate  = eventStruct.getString(fieldEventLastEditDate);
+
+    var timestamp     = Instant.parse(createDate);
+    if( lastEditDate != null && !lastEditDate.isEmpty())
+    {
+      timestamp = Instant.parse(lastEditDate);
+    }
+
+    return record.newRecord(routingKey, null, idField.schema(), id, payloadField.schema(), payload, timestamp.toEpochMilli());
   }
 
   @Override
@@ -75,9 +111,13 @@ public class OutboxTableTransform<R extends ConnectRecord<R>> implements Transfo
   public void configure(Map<String, ?> configMap) {
     var config = Configuration.from(configMap);
 
-    fieldEventId = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_ID);
-    fieldEventRoutingKey = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_ROUTING_KEY);
-    fieldEventPayload = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_PAYLOAD);
+    fieldEventId            = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_ID);
+    fieldEventAggregateName = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_ROUTING_KEY);
+    fieldEventAggregateId   = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_AGGREGATEID);
+    fieldEventEventName     = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_EVENTNAME);
+    fieldEventPayload       = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_PAYLOAD);
+    fieldEventCreateDate    = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_CREATEDATE);
+    fieldEventLastEditDate  = config.getString(OutboxTableTransformConfigDef.FIELD_EVENT_LASTEDITDATE);
 
     smtManager = new SmtManager<>(config);
 
