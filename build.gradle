@@ -7,10 +7,10 @@ application {
   mainClass.set('org.jvalue.outboxer.Main')
 }
 
-assert JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)
+assert JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_18)
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_17
+  sourceCompatibility = JavaVersion.VERSION_18
 }
 
 repositories {
@@ -18,10 +18,10 @@ repositories {
 }
 
 ext {
-  debeziumVersion = '2.1.1.Final'
-  lombokVersion = '1.18.24'
-  springRabbitVersion = '3.0.0'
-  slf4jVersion = '2.0.6'
+  slf4jVersion = '2.0.12'
+  lombokVersion = '1.18.30'
+  springRabbitVersion = '3.1.2'
+  debeziumVersion = '2.5.1.Final'
 }
 
 dependencies {
@@ -30,7 +30,6 @@ dependencies {
   implementation "io.debezium:debezium-connector-postgres:$debeziumVersion"
 
   implementation "org.slf4j:slf4j-jdk14:$slf4jVersion"
-
 
   implementation "org.springframework.amqp:spring-rabbit:$springRabbitVersion"
 

@@ -1,4 +1,7 @@
 {
     "java.configuration.updateBuildConfiguration": "disabled",
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "emmet.includeLanguages": {
+      "phoenix-heex": "html"
+    }
 }

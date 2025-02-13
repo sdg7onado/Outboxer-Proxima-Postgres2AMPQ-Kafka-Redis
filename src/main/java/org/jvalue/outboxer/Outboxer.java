@@ -1,15 +1,16 @@
 package org.jvalue.outboxer;
 
-import io.debezium.config.Configuration;
-import io.debezium.embedded.EmbeddedEngine;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.connect.errors.ConnectException;
-
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.kafka.connect.errors.ConnectException;
+
+import io.debezium.config.Configuration;
+import io.debezium.embedded.EmbeddedEngine;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Outboxer {
@@ -45,6 +46,14 @@ public class Outboxer {
     if (config == null || amqpPublisher == null) {
       throw new IllegalStateException("Outboxer is not initialized.");
     }
+
+    /*
+    this.engine = new EmbeddedEngine.BuilderImpl()
+      .using(config)
+      .notifying(amqpPublisher)
+      .using(completionCallback)
+      .build();
+    */
 
     this.engine = new EmbeddedEngine.BuilderImpl()
       .using(config)

@@ -1,10 +1,11 @@
 package org.jvalue.outboxer;
 
-import io.debezium.config.Configuration;
-import io.debezium.embedded.StopConnectorException;
-import io.debezium.engine.DebeziumEngine;
-import io.debezium.engine.StopEngineException;
-import lombok.extern.slf4j.Slf4j;
+import java.io.Closeable;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 import org.apache.kafka.connect.source.SourceRecord;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -14,11 +15,9 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+import io.debezium.config.Configuration;
+import io.debezium.engine.DebeziumEngine;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class is a {@link io.debezium.engine.DebeziumEngine.ChangeConsumer} that publishes
@@ -34,9 +33,9 @@ import java.util.List;
  */
 @Slf4j
 public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord>, Closeable {
-  private static final String AMQP_URL_CONFIG_NAME = "amqp.url";
-  private static final String AMQP_EXCHANGE_CONFIG_NAME = "amqp.exchange";
-  private static final String AMQP_RETRIES_CONFIG_NAME = "amqp.retries";
+  private static final String AMQP_URL_CONFIG_NAME            = "amqp.url";
+  private static final String AMQP_EXCHANGE_CONFIG_NAME       = "amqp.exchange";
+  private static final String AMQP_RETRIES_CONFIG_NAME        = "amqp.retries";
   private static final String AMQP_RETRY_DELAY_MS_CONFIG_NAME = "amqp.retry.delay.ms";
 
   private CachingConnectionFactory connectionFactory;
@@ -46,11 +45,11 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
   private long retryDelayMs;
 
   public void init(Configuration config) {
-    this.exchange = config.getString(AMQP_EXCHANGE_CONFIG_NAME);
-    this.retries = config.getInteger(AMQP_RETRIES_CONFIG_NAME);
-    this.retryDelayMs = config.getLong(AMQP_RETRY_DELAY_MS_CONFIG_NAME);
-    this.connectionFactory = new CachingConnectionFactory(URI.create(config.getString(AMQP_URL_CONFIG_NAME)));
-    this.template = new RabbitTemplate(connectionFactory);
+    this.exchange           = config.getString(AMQP_EXCHANGE_CONFIG_NAME);
+    this.retries            = config.getInteger(AMQP_RETRIES_CONFIG_NAME);
+    this.retryDelayMs       = config.getLong(AMQP_RETRY_DELAY_MS_CONFIG_NAME);
+    this.connectionFactory  = new CachingConnectionFactory(URI.create(config.getString(AMQP_URL_CONFIG_NAME)));
+    this.template           = new RabbitTemplate(connectionFactory);
   }
 
   @Override
@@ -63,12 +62,12 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
   }
 
   private void publishEvent(SourceRecord record) {
-    var routingKey = record.topic();
-    var eventId = (String) record.key();
-    var payload = (String) record.value();
+    var routingKey  = record.topic();
+    var eventId     = (String) record.key();
+    var payload     = (String) record.value();
 
-    log.info("Publishing event {} with routingKey {} and payload {}", eventId, routingKey, payload);    
-    
+    log.info("Publishing event {} with routingKey {} and payload {}", eventId, routingKey, payload);
+
     //Display payload
     // log.info("***START PRINTING PAYLOAD***","");
     // log.info("PAYLOAD =>",payload);

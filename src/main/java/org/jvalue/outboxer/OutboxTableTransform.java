@@ -1,19 +1,20 @@
 package org.jvalue.outboxer;
 
-import io.debezium.config.Configuration;
-import io.debezium.data.Envelope;
-import io.debezium.transforms.SmtManager;
-import lombok.extern.slf4j.Slf4j;
+import static org.apache.kafka.connect.transforms.util.Requirements.requireStruct;
+
+import java.time.Instant;
+import java.util.Map;
+
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.connect.connector.ConnectRecord;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.transforms.ExtractField;
 import org.apache.kafka.connect.transforms.Transformation;
 
-import java.time.Instant;
-import java.util.Map;
-
-import static org.apache.kafka.connect.transforms.util.Requirements.requireStruct;
+import io.debezium.config.Configuration;
+import io.debezium.data.Envelope;
+import io.debezium.transforms.SmtManager;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This transformation extracts the unique event id, the routing key, and the payload from the raw change records.
