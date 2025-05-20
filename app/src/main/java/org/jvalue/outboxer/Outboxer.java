@@ -14,11 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Outboxer {
-  private static final String DEFAULT_CONFIG_FILE       = "/outboxer.properties";
-  private static final String ENV_VAR_PREFIX            = "outboxer.";
-  private static final String STOP_TIMEOUT_MS_KEY       = "stop.timeout.ms";
-  private static final String START_RETRY_COUNT_KEY     = "start.retry.count";
-  private static final String START_RETRY_DELAY_MS_KEY  = "start.retry.delay.ms";
+  private static final String DEFAULT_CONFIG_FILE = "/outboxer.properties";
+  private static final String ENV_VAR_PREFIX = "outboxer.";
+  private static final String STOP_TIMEOUT_MS_KEY = "stop.timeout.ms";
+  private static final String START_RETRY_COUNT_KEY = "start.retry.count";
+  private static final String START_RETRY_DELAY_MS_KEY = "start.retry.delay.ms";
 
   private Configuration config;
   private EmbeddedEngine engine;
@@ -28,9 +28,9 @@ public class Outboxer {
 
   public void init() {
     config = ConfigHelper.fromResource(DEFAULT_CONFIG_FILE)
-      .edit()
-      .apply(ConfigHelper.fromEnvVar(ENV_VAR_PREFIX))
-      .build();
+        .edit()
+        .apply(ConfigHelper.fromEnvVar(ENV_VAR_PREFIX))
+        .build();
 
     executorService = Executors.newSingleThreadExecutor();
 
@@ -48,18 +48,18 @@ public class Outboxer {
     }
 
     /*
-    this.engine = new EmbeddedEngine.BuilderImpl()
-      .using(config)
-      .notifying(amqpPublisher)
-      .using(completionCallback)
-      .build();
-    */
+     * this.engine = new EmbeddedEngine.BuilderImpl()
+     * .using(config)
+     * .notifying(amqpPublisher)
+     * .using(completionCallback)
+     * .build();
+     */
 
     this.engine = new EmbeddedEngine.BuilderImpl()
-      .using(config)
-      .notifying(amqpPublisher)
-      .using(completionCallback)
-      .build();
+        .using(config)
+        .notifying(amqpPublisher)
+        .using(completionCallback)
+        .build();
 
     // Run the engine asynchronously ...
     executorService.execute(engine);
@@ -70,13 +70,15 @@ public class Outboxer {
     if (engine != null) {
       try {
         engine.await(config.getInteger(STOP_TIMEOUT_MS_KEY), TimeUnit.MILLISECONDS);
-      } catch (InterruptedException ignore) {}
+      } catch (InterruptedException ignore) {
+      }
     }
     // Try to close the amqp connection
     if (amqpPublisher != null) {
       try {
         amqpPublisher.close();
-      } catch(IOException ignore) {}
+      } catch (IOException ignore) {
+      }
     }
   }
 
@@ -111,7 +113,8 @@ public class Outboxer {
         start();
         retryCount++;
         return true;
-      } catch (InterruptedException ignore) {}
+      } catch (InterruptedException ignore) {
+      }
       return false;
     }
 
