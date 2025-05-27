@@ -1,2 +1,29 @@
-include ':app'
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+}
+
 rootProject.name = 't3llm3-outboxer-postgres2rabbitmq-redis'
+
+// Enable version catalogs feature (though it's enabled by default in newer Gradle versions)
+enableFeaturePreview('TYPESAFE_PROJECT_ACCESSORS')
+
+// Include your app module
+include 'app'
+
+// Configure dependency resolution strategy
+dependencyResolutionManagement {
+    // Use version catalogs for dependency management
+    versionCatalogs {
+        libs {
+            //from(files("gradle/libs.versions.toml"))
+        }
+    }
+
+    // Optional: Configure repository order and strategy
+    //repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}

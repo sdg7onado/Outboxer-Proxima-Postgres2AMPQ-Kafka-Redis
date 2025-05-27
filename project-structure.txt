@@ -1,0 +1,172 @@
+Folder PATH listing for volume Windows
+Volume serial number is 3A3D-7DB3
+C:.
+¦   .classpath
+¦   .dockerignore
+¦   .editorconfig
+¦   .gitignore
+¦   .project
+¦   Dockerfile
+¦   gradlew
+¦   gradlew.bat
+¦   LICENSE
+¦   offsets.dat
+¦   project-structure.txt
+¦   README.md
+¦   settings.gradle
+¦   
++---.github
+¦   +---workflows
+¦           outboxer.yml
+¦           
++---.gradle
+¦   +---8.12.1
+¦   ¦   ¦   gc.properties
+¦   ¦   ¦   
+¦   ¦   +---checksums
+¦   ¦   ¦       checksums.lock
+¦   ¦   ¦       md5-checksums.bin
+¦   ¦   ¦       sha1-checksums.bin
+¦   ¦   ¦       
+¦   ¦   +---executionHistory
+¦   ¦   ¦       executionHistory.bin
+¦   ¦   ¦       executionHistory.lock
+¦   ¦   ¦       
+¦   ¦   +---expanded
+¦   ¦   +---fileChanges
+¦   ¦   ¦       last-build.bin
+¦   ¦   ¦       
+¦   ¦   +---fileHashes
+¦   ¦   ¦       fileHashes.bin
+¦   ¦   ¦       fileHashes.lock
+¦   ¦   ¦       resourceHashesCache.bin
+¦   ¦   ¦       
+¦   ¦   +---vcsMetadata
+¦   +---buildOutputCleanup
+¦   ¦       buildOutputCleanup.lock
+¦   ¦       cache.properties
+¦   ¦       outputFiles.bin
+¦   ¦       
+¦   +---vcs-1
+¦           gc.properties
+¦           
++---.settings
+¦       .jsdtscope
+¦       org.eclipse.buildship.core.prefs
+¦       org.eclipse.jdt.apt.core.prefs
+¦       org.eclipse.jdt.core.prefs
+¦       org.eclipse.wst.jsdt.ui.superType.container
+¦       org.eclipse.wst.jsdt.ui.superType.name
+¦       
++---.vscode
+¦       settings.json
+¦       
++---app
+¦   ¦   build.gradle
+¦   ¦   
+¦   +---bin
+¦   ¦   +---default
+¦   ¦   +---generated-sources
+¦   ¦   ¦   +---annotations
+¦   ¦   +---main
+¦   ¦       ¦   log4j.properties
+¦   ¦       ¦   outboxer.properties
+¦   ¦       ¦   
+¦   ¦       +---org
+¦   ¦           +---jvalue
+¦   ¦               +---outboxer
+¦   ¦                       AmqpPublisher.class
+¦   ¦                       ConfigHelper.class
+¦   ¦                       Main.class
+¦   ¦                       Outboxer$OutboxerCompletionCallback.class
+¦   ¦                       Outboxer.class
+¦   ¦                       OutboxTableTransform.class
+¦   ¦                       OutboxTableTransformConfigDef.class
+¦   ¦                       
+¦   +---build
+¦   ¦   +---classes
+¦   ¦   ¦   +---java
+¦   ¦   ¦       +---main
+¦   ¦   +---generated
+¦   ¦   ¦   +---sources
+¦   ¦   ¦       +---annotationProcessor
+¦   ¦   ¦       ¦   +---java
+¦   ¦   ¦       ¦       +---main
+¦   ¦   ¦       +---headers
+¦   ¦   ¦           +---java
+¦   ¦   ¦               +---main
+¦   ¦   +---tmp
+¦   ¦       +---compileJava
+¦   +---src
+¦       +---main
+¦           +---java
+¦           ¦   +---org
+¦           ¦       +---jvalue
+¦           ¦           +---outboxer
+¦           ¦                   AmqpPublisher.java
+¦           ¦                   ConfigHelper.java
+¦           ¦                   Main.java
+¦           ¦                   Outboxer.java
+¦           ¦                   OutboxTableTransform.java
+¦           ¦                   OutboxTableTransformConfigDef.java
+¦           ¦                   
+¦           +---resources
+¦                   log4j.properties
+¦                   outboxer.properties
+¦                   
++---bin
+¦   +---default
+¦   +---generated-sources
+¦   ¦   +---annotations
+¦   +---main
+¦           AmqpPublisher.class
+¦           ConfigHelper.class
+¦           log4j.properties
+¦           Main.class
+¦           Outboxer$OutboxerCompletionCallback.class
+¦           Outboxer.class
+¦           outboxer.properties
+¦           OutboxTableTransform.class
+¦           OutboxTableTransformConfigDef.class
+¦           
++---build
+¦   +---distributions
+¦   ¦       t3llm3-outboxer-postgres2rabbitmq-redis.tar
+¦   ¦       t3llm3-outboxer-postgres2rabbitmq-redis.zip
+¦   ¦       
+¦   +---libs
+¦   ¦       t3llm3-outboxer-postgres2rabbitmq-redis.jar
+¦   ¦       
+¦   +---reports
+¦   ¦   +---problems
+¦   ¦           problems-report.html
+¦   ¦           
+¦   +---scripts
+¦   ¦       t3llm3-outboxer-postgres2rabbitmq-redis
+¦   ¦       t3llm3-outboxer-postgres2rabbitmq-redis.bat
+¦   ¦       
+¦   +---tmp
+¦       +---jar
+¦               MANIFEST.MF
+¦               
++---gradle
+¦   ¦   libs.versions.toml
+¦   ¦   
+¦   +---wrapper
+¦           gradle-wrapper.jar
+¦           gradle-wrapper.properties
+¦           
++---integration-test
+    ¦   .gitignore
+    ¦   docker-compose.yml
+    ¦   jest.config.js
+    ¦   package-lock.json
+    ¦   package.json
+    ¦   
+    +---src
+            amqp-consumer.js
+            docker-compose.js
+            env.js
+            outbox-database.js
+            outbox-publisher.test.js
+            

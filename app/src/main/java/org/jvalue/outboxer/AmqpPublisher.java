@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.kafka.connect.source.SourceRecord;
 import org.springframework.amqp.AmqpException;
@@ -20,20 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class is a {@link io.debezium.engine.DebeziumEngine.ChangeConsumer} that
- * publishes
- * the events via AMQP. It will get called by the debezium engine to handle the
- * change records.
- *
- * This implementation requires a specific format of the change records, which
- * can be created by
- * the {@link OutboxTableTransform}:
- * <ul>
- * <li>The record's topic will be the AMQP routing key</li>
- * <li>The record's key is the unique event id and will be the AMQP message
- * id</li>
- * <li>The record's value is the event payload and will be the AMQP message
- * body</li>
- * </ul>
+ * publishes the events via AMQP.
  */
 @Slf4j
 public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord>, Closeable {
@@ -48,11 +36,11 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
   private int retries;
   private long retryDelayMs;
 
-  public void init(Configuration config) {
-    this.exchange = config.getString(AMQP_EXCHANGE_CONFIG_NAME);
-    this.retries = config.getInteger(AMQP_RETRIES_CONFIG_NAME);
-    this.retryDelayMs = config.getLong(AMQP_RETRY_DELAY_MS_CONFIG_NAME);
-    this.connectionFactory = new CachingConnectionFactory(URI.create(config.getString(AMQP_URL_CONFIG_NAME)));
+  public void init(Properties config) {
+    this.exchange = config.getProperty(AMQP_EXCHANGE_CONFIG_NAME);
+    this.retries = Integer.parseInt(config.getProperty(AMQP_RETRIES_CONFIG_NAME, "5"));
+    this.retryDelayMs = Long.parseLong(config.getProperty(AMQP_RETRY_DELAY_MS_CONFIG_NAME, "1000"));
+    this.connectionFactory = new CachingConnectionFactory(URI.create(config.getProperty(AMQP_URL_CONFIG_NAME)));
     this.template = new RabbitTemplate(connectionFactory);
   }
 
@@ -66,37 +54,22 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
     committer.markBatchFinished();
   }
 
-  private void publishEvent(SourceRecord record) {
+  void publishEvent(SourceRecord record) {
     var routingKey = record.topic();
     var eventId = (String) record.key();
     var payload = (String) record.value();
 
     log.info("Publishing event {} with routingKey {} and payload {}", eventId, routingKey, payload);
 
-    // Display payload
-    // log.info("***START PRINTING PAYLOAD***","");
-    // log.info("PAYLOAD =>",payload);
-    // log.info("***END PRINTING PAYLOAD***","");
-
     var message = createAmqpMessage(eventId, payload);
 
-    // If the message could not be send to amqp, a retry is performed after a delay.
-    // If the message could still
-    // not be published, it is important that debezium terminates. Otherwise
-    // messages can get out of order.
-    // Therefore we rethrow the AmqpException, if all retries have been failed.
-    // Debezium will catch the exception
-    // and terminate. Then the operator is responsible to resolve the issue and
-    // restart the outboxer service.
-    // Outboxer will then automatically reprocess the failed message, because it has
-    // never been marked as processed.
     for (int i = 0; i <= retries; i++) {
       try {
         template.send(exchange, routingKey, message);
         return;
       } catch (RuntimeException e) {
         if (i >= retries) {
-          throw e;
+          throw new AmqpException("Could not publish event after " + retries + " retries", e);
         }
         try {
           Thread.sleep(retryDelayMs);
@@ -104,7 +77,6 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
         }
       }
     }
-    throw new AmqpException("Could publish event after " + retries + " retries");
   }
 
   private Message createAmqpMessage(String eventId, String payload) {
@@ -112,9 +84,7 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
     messageProps.setContentType(MessageProperties.CONTENT_TYPE_JSON);
     messageProps.setContentEncoding(StandardCharsets.UTF_8.name());
     messageProps.setMessageId(eventId);
-    // Persist message so it does survive RabbitMQ restarts
     messageProps.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
-
     return new Message(payload.getBytes(StandardCharsets.UTF_8), messageProps);
   }
 

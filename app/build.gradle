@@ -7,32 +7,47 @@ application {
   mainClass.set('org.jvalue.outboxer.Main')
 }
 
-assert JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_18)
+assert JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_23)
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_18
+  sourceCompatibility = JavaVersion.VERSION_23
 }
 
 repositories {
   mavenCentral()
-}
-
-ext {
-  slf4jVersion = '2.0.12'
-  lombokVersion = '1.18.30'
-  springRabbitVersion = '3.1.2'
-  debeziumVersion = '3.0.7.Final'
+  maven {
+      url "https://repository.jboss.org/nexus/content/groups/public/"
+  }
 }
 
 dependencies {
-  implementation "io.debezium:debezium-api:$debeziumVersion"
-  implementation "io.debezium:debezium-embedded:$debeziumVersion"
-  implementation "io.debezium:debezium-connector-postgres:$debeziumVersion"
+    // Spring AMQP (includes both core and rabbit)
+    implementation libs.spring.amqp
+    implementation libs.spring.rabbit
 
-  implementation "org.slf4j:slf4j-jdk14:$slf4jVersion"
+    // Kafka Connect
+    implementation libs.kafka.connect.api
+    implementation libs.kafka.connect.runtime
 
-  implementation "org.springframework.amqp:spring-rabbit:$springRabbitVersion"
+    // Database
+    implementation libs.postgresql.driver
 
-  compileOnly "org.projectlombok:lombok:$lombokVersion"
-  annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    // Redis
+    implementation libs.jedis
+
+    // Debezium
+    implementation libs.debezium.api
+    implementation libs.debezium.core
+    implementation libs.debezium.embedded
+
+    // Logging
+    implementation libs.slf4j.api
+
+    // Lombok for code generation
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+
+    // Testing (if you need it)
+    testImplementation platform('org.junit:junit-bom:5.10.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
 }

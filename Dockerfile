@@ -2,9 +2,16 @@
 # First stage: image to build the application           #
 #-------------------------------------------------------#
 # The gradle version here should match the gradle version in gradle/wrapper/gradle-wrapper.properties
-FROM gradle:6.7-jdk15-openj9 as builder
+FROM eclipse-temurin:24-jdk-alpine AS builder
 
 WORKDIR /builder
+
+# Install Gradle
+RUN apk add --no-cache curl unzip && \
+	curl -fsSL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o gradle.zip && \
+	unzip gradle.zip -d /opt && \
+	ln -s /opt/gradle-8.4/bin/gradle /usr/bin/gradle && \
+	rm gradle.zip
 
 # Copy project files
 COPY *.gradle /builder/
