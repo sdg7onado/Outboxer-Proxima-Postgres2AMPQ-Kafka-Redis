@@ -1,0 +1,53 @@
+plugins {
+  id 'java'
+  id 'application'
+}
+
+application {
+  mainClass.set('org.jvalue.outboxer.Main')
+}
+
+assert JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_23)
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_23
+}
+
+repositories {
+  mavenCentral()
+  maven {
+      url "https://repository.jboss.org/nexus/content/groups/public/"
+  }
+}
+
+dependencies {
+    // Spring AMQP (includes both core and rabbit)
+    implementation libs.spring.amqp
+    implementation libs.spring.rabbit
+
+    // Kafka Connect
+    implementation libs.kafka.connect.api
+    implementation libs.kafka.connect.runtime
+
+    // Database
+    implementation libs.postgresql.driver
+
+    // Redis
+    implementation libs.jedis
+
+    // Debezium
+    implementation libs.debezium.api
+    implementation libs.debezium.core
+    implementation libs.debezium.embedded
+
+    // Logging
+    implementation libs.slf4j.api
+
+    // Lombok for code generation
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+
+    // Testing (if you need it)
+    testImplementation platform('org.junit:junit-bom:5.10.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
