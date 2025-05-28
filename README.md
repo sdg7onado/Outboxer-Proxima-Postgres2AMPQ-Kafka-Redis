@@ -165,7 +165,7 @@ The outboxer service consists of three main components:
 
 <pre><code>```mermaid flowchart TD subgraph PostgreSQL A[Outbox Table] end subgraph Outboxer B[Debezium Embedded Engine] C[OutboxTableTransform] D[Publisher (AMQP/Redis)] end subgraph Broker E[RabbitMQ/Redis] end A -- WAL Changes --> B B -- Change Events --> C C -- Event Payload --> D D -- Publish --> E ```</code></pre>
 
-``` mermaid
+```mermaid
 flowchart TD
     subgraph PostgreSQL
         A[Outbox Table]
@@ -182,7 +182,7 @@ flowchart TD
     B -- Change Events --> C
     C -- Event Payload --> D
     D -- Publish --> E
-  ```
+
 ---
 
 ### 🗂️ Project Structure
