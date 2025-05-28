@@ -180,6 +180,7 @@ flowchart TD
     B -- Change Events --> C
     C -- Event Payload --> D
     D -- Publish --> E
+```
 
 ---
 
