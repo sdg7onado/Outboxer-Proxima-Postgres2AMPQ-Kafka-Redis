@@ -163,8 +163,6 @@ The outboxer service consists of three main components:
   change records. It does also discard update and delete change records because once an event is published (e.g. added 
   to the outbox table) it should neither be changed nor deleted.
 
-<pre><code>```mermaid flowchart TD subgraph PostgreSQL A[Outbox Table] end subgraph Outboxer B[Debezium Embedded Engine] C[OutboxTableTransform] D[Publisher (AMQP/Redis)] end subgraph Broker E[RabbitMQ/Redis] end A -- WAL Changes --> B B -- Change Events --> C C -- Event Payload --> D D -- Publish --> E ```</code></pre>
-
 ```mermaid
 flowchart TD
     subgraph PostgreSQL
