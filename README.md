@@ -179,7 +179,7 @@ flowchart TD
     A -- WAL Changes --> B
     B -- Change Events --> C
     C -- Event Payload --> D
-    D -- Publish --> E
+    D -- Publish (AMPQ, Redis, Kafka) --> E
 ```
 
 ---
