@@ -171,7 +171,7 @@ flowchart TD
     subgraph Outboxer
         B[Debezium Embedded Engine]
         C[OutboxTableTransform]
-        D[Publisher (AMQPKafkaRedis)]
+        D[Publisher]
     end
     subgraph Broker
         E[RabbitMQ/Redis]
