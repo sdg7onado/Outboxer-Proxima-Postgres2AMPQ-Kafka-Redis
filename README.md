@@ -174,12 +174,12 @@ flowchart TD
         D[Publisher]
     end
     subgraph Broker
-        E[RabbitMQ/Redis]
+        E[RabbitMQ/Redis/Kafka]
     end
     A -- WAL Changes --> B
     B -- Change Events --> C
     C -- Event Payload --> D
-    D -- Publish (AMPQ, Redis, Kafka) --> E
+    D -- Publish --> E
 ```
 
 ---
