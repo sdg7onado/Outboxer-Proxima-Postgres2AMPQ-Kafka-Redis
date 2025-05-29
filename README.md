@@ -1,4 +1,4 @@
-# Outboxer Proxima: PostgreSQL → RabbitMQ/Redis
+# Outboxer Proxima: PostgreSQL → RabbitMQ/Kafka/Redis
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Debezium](https://img.shields.io/badge/Debezium-Embedded-green)](https://debezium.io/)
@@ -7,7 +7,7 @@
 ---
 
 Outboxer Proxima is a robust, production-ready service for implementing the [Transactional Outbox Pattern](https://microservices.io/patterns/data/transactional-outbox.html) in Java.  
-It captures changes from a PostgreSQL outbox table using [Debezium Embedded Engine](https://debezium.io/) and reliably publishes events to RabbitMQ or Redis, enabling event-driven microservices architectures.
+It captures changes from a PostgreSQL outbox table using [Debezium Engine](https://debezium.io/) and reliably publishes events to Kafka, RabbitMQ or Redis, enabling event-driven microservices architectures.
 
 ---
 
@@ -115,40 +115,6 @@ Outboxer can be configured via a `outboxer.properties` file or environment varia
 Note: all properties can also be passed via environment variables, but they must be prefixed with `outboxer.` and can be
 written in `UPPER_UNDERSCORE` format (e.g. `OUTBOXER_DATABASE_HOSTNAME`).
 
-### Example ```outboxer.properties```
-
-```database.hostname=localhost
-database.port=5432
-database.user=postgres
-database.password=postgres
-database.dbname=outbox
-database.server.name=outboxer-connector
-
-schema.include.list=public
-table.include.list=public.outbox
-
-offset.storage=org.apache.kafka.connect.storage.FileOffsetBackingStore
-offset.storage.file.filename=/data/outboxer-offsets.dat
-offset.flush.interval.ms=60000
-
-publisher.type=rabbitmq
-publisher.amqp.url=amqp://guest:guest@rabbitmq:5672/
-publisher.amqp.exchange=outbox.events
-publisher.amqp.retries=5
-publisher.amqp.retry.delay=2000
-
-# publisher.type=redis
-# publisher.redis.host=redis
-# publisher.redis.port=6379
-
-transforms.outbox.table.field.event.Id=id
-transforms.outbox.table.field.event.routing_key=routing_key
-transforms.outbox.table.field.event.AggregagteId=aggregate_id
-transforms.outbox.table.field.event.EventName=event_name
-transforms.outbox.table.field.event.Payload=payload
-transforms.outbox.table.field.event.CreateDate=created_at 
-```
-
 ---
 
 ## Architecture
@@ -183,7 +149,6 @@ flowchart TD
 ```
 
 ---
-
 ### 🗂️ Project Structure
 ```
 outboxer-proxima-postgres-rabbitmq-redis/
@@ -216,23 +181,221 @@ outboxer-proxima-postgres-rabbitmq-redis/
 └── outboxer.properties
 ```
 
+## Getting Started
+### Prerequisites
+  - Java 17+
+  - Gradle 7+
+  - Docker (for containerized deployment)
+  - Running PostgreSQL instance
+  - RabbitMQ or Redis instance
+
+### Configuration
+Outboxer can be configured via an ```outboxer.properties``` file or environment variables.
+
+
+#### ```outboxer.properties```
+
+```database.hostname=localhost
+database.port=5432
+database.user=postgres
+database.password=postgres
+database.dbname=outbox
+database.server.name=outboxer-connector
+
+schema.include.list=public
+table.include.list=public.outbox
+
+offset.storage=org.apache.kafka.connect.storage.FileOffsetBackingStore
+offset.storage.file.filename=/data/outboxer-offsets.dat
+offset.flush.interval.ms=60000
+
+publisher.type=rabbitmq
+publisher.amqp.url=amqp://guest:guest@rabbitmq:5672/
+publisher.amqp.exchange=outbox.events
+publisher.amqp.retries=5
+publisher.amqp.retry.delay=2000
+
+# publisher.type=redis
+# publisher.redis.host=redis
+# publisher.redis.port=6379
+
+transforms.outbox.table.field.event.Id=id
+transforms.outbox.table.field.event.routing_key=routing_key
+transforms.outbox.table.field.event.AggregagteId=aggregate_id
+transforms.outbox.table.field.event.EventName=event_name
+transforms.outbox.table.field.event.Payload=payload
+transforms.outbox.table.field.event.CreateDate=created_at 
+```
+
+#### ```Database Properties```
+```
+database.hostname=localhost
+database.port=5432
+database.user=postgres
+database.password=postgres
+database.dbname=outbox
+database.server.name=outboxer-connector
+```
+
+#### ```# Schema/Table Properties```
+```
+schema.include.list=public
+table.include.list=public.outbox
+```
+
+#### ```Offset Storage```
+```
+offset.storage=org.apache.kafka.connect.storage.FileOffsetBackingStore
+offset.storage.file.filename=/data/outboxer-offsets.dat
+offset.flush.interval.ms=60000
+```
+
+#### ```Publisher Properties (RabbitMQ)```
+```
+publisher.type=rabbitmq
+publisher.amqp.url=amqp://guest:guest@rabbitmq:5672/
+publisher.amqp.exchange=outbox.events
+publisher.amqp.retries=5
+publisher.amqp.retry.delay=2000
+```
+
+#### ```Publisher Properties (Redis)```
+```
+publisher.type=redis
+publisher.redis.host=redis
+publisher.redis.port=6379
+```
+
+#### ```Transformer Properties```
+```
+transforms.outbox.table.field.event.Id=id
+transforms.outbox.table.field.event.routing_key=routing_key
+transforms.outbox.table.field.event.AggregagteId=aggregate_id
+transforms.outbox.table.field.event.EventName=event_name
+transforms.outbox.table.field.event.Payload=payload
+transforms.outbox.table.field.event.CreateDate=created_at
+```
+
+#### Environment Variables
+All properties can also be set as environment variables, prefixed with ```OUTBOXER_``` and in ```UPPER_UNDERSCORE``` format:
+```
+export OUTBOXER_DATABASE_HOSTNAME=localhost
+export OUTBOXER_PUBLISHER_TYPE=rabbitmq
+```
+
+### Running with Docker
+Build the Docker image:
+```
+docker build -t outboxer-proxima .
+```
+Run with Docker Compose (recommended for local development):
+```
+docker-compose -f docker-compose.yml up --build
+```
+
+> **Note:**
+> Ensure your offset.storage.file.filename is mapped to a Docker volume for persistence.
+
+### Running Locally
+Build the project:
+```
+./gradlew build
+```
+Run the application:
+```
+./gradlew :app:run
+```
+Or run the JAR directly:
+```
+java -jar [app.jar](http://_vscodecontentref_/3)
+```
+
+## Usage Example
+Java API
+```
+import org.jvalue.outboxer.Outboxer;
+
+public class Main {
+    public static void main(String[] args) {
+        Outboxer outboxer = new Outboxer();
+        outboxer.init();
+        outboxer.start();
+
+        // ... application logic ...
+
+        outboxer.stop();
+    }
+}
+```
+## Testing
+Unit and integration tests are located in ```app/src/test/java/org/jvalue/outboxer/```.
+
+Run all tests:
+
+```./gradlew test```
+
+Example test (JUnit):
+
+```
+@Test
+public void testOutboxerInitialization() {
+    Outboxer outboxer = new Outboxer();
+    assertDoesNotThrow(outboxer::init);
+}
+```
 
 ## Resilience & Failure Handling
 
-Outboxer is very resilience to any kind of failure. The offset in the write-ahead log of the last processed event is 
+Outboxer is very resilience to any kind of failure. 
+
+- #### **Offset Storage:**
+  Outboxer stores its current offset (Postgres WAL position) in a file. This ensures that after a restart, Outboxer resumes from the last processed event.
+  
+
+  > If running in a container, mount the offset file to a Docker volume for persistence.
+  
+  The offset in the write-ahead log of the last processed event is 
 stored in a file (see `offset.storage.file.filename` property). Outboxer does restore the current offset from this file
-after a restart and will only process events that have happened after this offset. Because a new offset can not be
+after a restart and will only process events that have happened after this offset. 
+
+- #### **At least-once Delivery:**
+
+  Because a new offset can not be
 written to disk atomically after the event has been processed, outboxer can only provide at least once delivery for the
 events. Therefore, idempotent event consumer should be used, so duplicate events do not cause any issues.
 
-In the following a few common failure scenarios are described in more detail:
-- **PostgreSQL becomes unavailable**: If the connection the database is broken, debezium will determine the error kind. 
+- #### **Failure Scenarios:**
+  - **PostgreSQL becomes unavailable**: If the connection the database is broken, debezium will determine the error kind. 
   If it is a retriable error, debezium will automatically wait some time (configurable with the 
   `retriable.restart.connector.wait.ms` property) before restarting the database connector. If the restart fails, or a
   non retriable error was thrown initially outboxer will terminate. The operator is then responsible to resolve the
   issue and start outboxer again.
-- **AMQP broker becomes unavailable**: If the publication of an event is failing, retries are performed as configured
+  - **AMQP broker becomes unavailable**: If the publication of an event is failing, retries are performed as configured
   with the `publisher.amqp.retries` and `publisher.amqp.retry.delay` properties. If all retries are failing, outboxer
   will terminate. Then the operator is responsible to resolve the issue and restart outboxer.
-- **Outboxer crashes**: If outboxer is restarted after a crash, it will read the stored offset and will start processing
+  - **Outboxer crashes**: If outboxer is restarted after a crash, it will read the stored offset and will start processing
   events that have happened after the current offset.
+
+## Extending Outboxer
+To add a new publisher (e.g., `IBMMq`):
+
+- Implement a new publisher class (e.g., `IBMMqPublisher`).
+- Register it in `Outboxer.java` based on the `publisher.type` property.
+- Add new configuration options as needed.
+
+## Contributing
+Contributions are welcome! Please:
+
+- Open issues for bugs or feature requests.
+- Fork and submit pull requests for improvements.
+- Follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
+
+## License
+This project is licensed under the MIT License.
+
+## Acknowledgements
+- [Debezium](https://debezium.io/)
+- [RabbitMQ](https://www.rabbitmq.com/)
+- [Redis](https://redis.io/)
+- [Spring AMQP](https://spring.io/projects/spring-amqp)
+- [Microservices.io](https://microservices.io/)
