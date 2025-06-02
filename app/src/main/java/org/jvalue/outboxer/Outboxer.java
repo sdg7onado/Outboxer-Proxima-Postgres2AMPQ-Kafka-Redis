@@ -1,14 +1,12 @@
 package org.jvalue.outboxer;
 
 import io.debezium.config.Configuration;
-import io.debezium.data.Json;
+import io.debezium.engine.format.Json;
 import io.debezium.embedded.Connect;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.RecordChangeEvent;
 import io.debezium.engine.format.ChangeEventFormat;
-import io.debezium.engine.format.KeyValueChangeEventFormat;
-import io.debezium.engine.format.KeyValueHeaderChangeEventFormat;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -26,8 +24,9 @@ public class Outboxer {
   private static final String STOP_TIMEOUT_MS_KEY = "stop.timeout.ms";
 
   private Configuration config;
-  private DebeziumEngine<RecordChangeEvent<SourceRecord>> engine;
+  private DebeziumEngine<ChangeEvent<String, String>> engine;
   private AmqpPublisher amqpPublisher;
+  private CompositeChangeConsumer compositeConsumer;
   private ExecutorService executorService;
 
   public void init() {
@@ -39,6 +38,9 @@ public class Outboxer {
     amqpPublisher = new AmqpPublisher();
     amqpPublisher.init(config.subset("publisher.", true).asProperties());
 
+    compositeConsumer = new CompositeChangeConsumer(
+        config.subset("publisher.", true).asProperties());
+
   }
 
   public void start() {
@@ -46,18 +48,26 @@ public class Outboxer {
       throw new IllegalStateException("Outboxer is not initialized.");
     }
 
-    engine = DebeziumEngine.create(ChangeEventFormat.of(Connect.class))
+    try (DebeziumEngine<ChangeEvent<String, String>> engine = DebeziumEngine.create(Json.class)
         .using(config.asProperties())
-        .notifying(record -> {
-          SourceRecord sourceRecord = record.record();
-          if (sourceRecord != null) {
-            amqpPublisher.publishEvent(sourceRecord);
-          }
-        })
-        .build();
+        .notifying(
+            compositeConsumer)
+        .build()) {
+      ExecutorService executor = Executors.newSingleThreadExecutor();
+      executor.execute(engine);
 
-    executorService = Executors.newSingleThreadExecutor();
-    executorService.execute(engine);
+      // Wait for some time or a signal
+      Thread.sleep(60000);
+      executor.shutdown();
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        amqpPublisher.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   public void stop() {

@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.kafka.connect.source.SourceRecord;
 import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Message;
@@ -16,6 +15,7 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
+import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +24,8 @@ import lombok.extern.slf4j.Slf4j;
  * publishes the events via AMQP.
  */
 @Slf4j
-public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord>, Closeable {
+public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<ChangeEvent<String, String>>, Closeable {
+
   private static final String AMQP_URL_CONFIG_NAME = "amqp.url";
   private static final String AMQP_EXCHANGE_CONFIG_NAME = "amqp.exchange";
   private static final String AMQP_RETRIES_CONFIG_NAME = "amqp.retries";
@@ -45,7 +46,8 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
   }
 
   @Override
-  public void handleBatch(List<SourceRecord> records, DebeziumEngine.RecordCommitter<SourceRecord> committer)
+  public void handleBatch(List<ChangeEvent<String, String>> records,
+      DebeziumEngine.RecordCommitter<ChangeEvent<String, String>> committer)
       throws InterruptedException {
     for (var record : records) {
       publishEvent(record);
@@ -54,10 +56,10 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
     committer.markBatchFinished();
   }
 
-  void publishEvent(SourceRecord record) {
-    var routingKey = record.topic();
-    var eventId = (String) record.key();
-    var payload = (String) record.value();
+  void publishEvent(ChangeEvent<String, String> record) {
+    var routingKey = record.destination(); // Use destination() instead of topic()
+    var eventId = record.key();
+    var payload = record.value();
 
     log.info("Publishing event {} with routingKey {} and payload {}", eventId, routingKey, payload);
 
@@ -74,6 +76,7 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<SourceRecord
         try {
           Thread.sleep(retryDelayMs);
         } catch (InterruptedException ignore) {
+          // Ignore
         }
       }
     }
