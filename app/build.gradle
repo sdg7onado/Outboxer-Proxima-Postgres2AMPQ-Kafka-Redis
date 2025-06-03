@@ -1,6 +1,7 @@
 plugins {
   id 'java'
   id 'application'
+  id "com.github.ben-manes.versions" version "0.52.0"
 }
 
 application {
@@ -16,7 +17,7 @@ java {
 repositories {
   mavenCentral()
   maven {
-      url "https://repository.jboss.org/nexus/content/groups/public/"
+      url = "https://repository.jboss.org/nexus/content/groups/public/"
   }
 }
 
