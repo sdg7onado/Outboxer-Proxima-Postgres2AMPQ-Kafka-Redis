@@ -8,7 +8,7 @@ application {
   mainClass.set('org.jvalue.outboxer.Main')
 }
 
-assert JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_23)
+assert JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)
 
 java {
   sourceCompatibility = JavaVersion.VERSION_23
@@ -40,9 +40,11 @@ dependencies {
     implementation libs.debezium.api
     implementation libs.debezium.core
     implementation libs.debezium.embedded
+    implementation libs.debezium.connector.postgres
 
     // Logging
     implementation libs.slf4j.api
+    implementation libs.slf4j.simple
 
     // Lombok for code generation
     compileOnly libs.lombok

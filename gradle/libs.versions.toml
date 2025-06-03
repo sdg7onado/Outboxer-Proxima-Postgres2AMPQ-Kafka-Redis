@@ -1,6 +1,7 @@
 [versions]
 kafka = "4.0.0"
 slf4j = "2.1.0-alpha1"
+slf4j-simple = "2.1.0-alpha1"
 lombok = "1.18.38"
 spring-amqp = "4.0.0-M2"
 debezium = "3.1.1.Final"
@@ -9,12 +10,14 @@ jedis = "6.0.0"
 
 [libraries]
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j-simple" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 spring-amqp = { module = "org.springframework.amqp:spring-amqp", version.ref = "spring-amqp" }
 spring-rabbit = { module = "org.springframework.amqp:spring-rabbit", version.ref = "spring-amqp" }
 debezium-api = { module = "io.debezium:debezium-api", version.ref = "debezium" }
 debezium-core = { module = "io.debezium:debezium-core", version.ref = "debezium" }
 debezium-embedded = { module = "io.debezium:debezium-embedded", version.ref = "debezium" }
+debezium-connector-postgres = { module = "io.debezium:debezium-connector-postgres", version.ref = "debezium" }
 postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 jedis = { module = "redis.clients:jedis", version.ref = "jedis" }
 kafka-connect-api = { module = "org.apache.kafka:connect-api", version.ref = "kafka" }
