@@ -2,19 +2,14 @@ package org.jvalue.outboxer;
 
 import io.debezium.config.Configuration;
 import io.debezium.engine.format.Json;
-import io.debezium.embedded.Connect;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
-import io.debezium.engine.RecordChangeEvent;
-import io.debezium.engine.format.ChangeEventFormat;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.kafka.connect.source.SourceRecord;
 
 @Slf4j
 public class Outboxer {
@@ -25,7 +20,6 @@ public class Outboxer {
 
   private Configuration config;
   private DebeziumEngine<ChangeEvent<String, String>> engine;
-  private AmqpPublisher amqpPublisher;
   private CompositeChangeConsumer compositeConsumer;
   private ExecutorService executorService;
 
@@ -35,16 +29,13 @@ public class Outboxer {
         .apply(ConfigHelper.fromEnvVar(ENV_VAR_PREFIX))
         .build();
 
-    amqpPublisher = new AmqpPublisher();
-    amqpPublisher.init(config.subset("publisher.", true).asProperties());
-
     compositeConsumer = new CompositeChangeConsumer(
         config.subset("publisher.", true).asProperties());
 
   }
 
   public void start() {
-    if (config == null || amqpPublisher == null) {
+    if (config == null || compositeConsumer == null) {
       throw new IllegalStateException("Outboxer is not initialized.");
     }
 
@@ -63,7 +54,7 @@ public class Outboxer {
       e.printStackTrace();
     } finally {
       try {
-        amqpPublisher.close();
+        compositeConsumer.close();
       } catch (Exception e) {
         e.printStackTrace();
       }
@@ -84,9 +75,9 @@ public class Outboxer {
       }
     }
 
-    if (amqpPublisher != null) {
+    if (compositeConsumer != null) {
       try {
-        amqpPublisher.close();
+        compositeConsumer.close();
       } catch (IOException ignore) {
       }
     }
