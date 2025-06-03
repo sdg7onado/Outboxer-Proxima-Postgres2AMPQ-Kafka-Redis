@@ -62,8 +62,8 @@ public class Outboxer {
       executor.execute(engine);
 
       // Wait for some time or a signal
-      Thread.sleep(60000);
-      executor.shutdown();
+      // Thread.sleep(60000);
+      // executor.shutdown();
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
