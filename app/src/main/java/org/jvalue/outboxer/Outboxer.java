@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermissions;
 
 @Slf4j
 public class Outboxer {
@@ -28,6 +30,18 @@ public class Outboxer {
         .edit()
         .apply(ConfigHelper.fromEnvVar(ENV_VAR_PREFIX))
         .build();
+
+    String offsetFile = config.getString("offset.storage.file.filename");
+    if (offsetFile != null) {
+      try {
+        Path offsetPath = Paths.get(offsetFile);
+        if (Files.exists(offsetPath)) {
+          Files.setPosixFilePermissions(offsetPath, PosixFilePermissions.fromString("rw-------"));
+        }
+      } catch (Exception e) {
+        log.warn("Could not set permissions on offset file: " + offsetFile, e);
+      }
+    }
 
     compositeConsumer = new CompositeChangeConsumer(
         config.subset("publisher.", true).asProperties());
