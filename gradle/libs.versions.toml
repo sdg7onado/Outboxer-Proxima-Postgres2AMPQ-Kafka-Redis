@@ -7,6 +7,8 @@ spring-amqp = "4.0.0-M2"
 debezium = "3.1.1.Final"
 postgresql = "42.7.6"
 jedis = "6.0.0"
+lettuce = "6.7.0.RELEASE"
+reactor = "3.7.6"
 
 [libraries]
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
@@ -20,5 +22,7 @@ debezium-embedded = { module = "io.debezium:debezium-embedded", version.ref = "d
 debezium-connector-postgres = { module = "io.debezium:debezium-connector-postgres", version.ref = "debezium" }
 postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 jedis = { module = "redis.clients:jedis", version.ref = "jedis" }
+lettuce = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 kafka-connect-api = { module = "org.apache.kafka:connect-api", version.ref = "kafka" }
 kafka-connect-runtime = { module = "org.apache.kafka:connect-runtime", version.ref = "kafka" }
+reactor-core = { module = "io.projectreactor:reactor-core", version.ref = "reactor" }

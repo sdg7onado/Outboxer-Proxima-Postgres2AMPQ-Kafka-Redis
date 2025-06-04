@@ -35,6 +35,10 @@ dependencies {
 
     // Redis
     implementation libs.jedis
+    implementation libs.lettuce
+
+    // Reactor
+    implementation libs.reactor.core
 
     // Debezium
     implementation libs.debezium.api

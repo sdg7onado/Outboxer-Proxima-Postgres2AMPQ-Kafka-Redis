@@ -1,5 +1,8 @@
 package org.jvalue.outboxer;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -37,14 +40,6 @@ public class CompositeChangeConsumer implements DebeziumEngine.ChangeConsumer<Ch
         throw e; // Rethrow to fail fast; adjust based on your error handling policy
       }
 
-      // Publish to Redis
-      try {
-        redisPublisher.publishEvent(record);
-      } catch (Exception e) {
-        log.error("Failed to publish to Redis: {}", e.getMessage());
-        throw e;
-      }
-
       // Publish to Kafka
       try {
         kafkaPublisher.publishEvent(record);
@@ -52,7 +47,22 @@ public class CompositeChangeConsumer implements DebeziumEngine.ChangeConsumer<Ch
         log.error("Failed to publish to Kafka: {}", e.getMessage());
         throw e;
       }
+    }
 
+    // Collect all Redis publish calls
+    List<Mono<Void>> redisPublishes = records.stream()
+        .map(redisPublisher::publishEvent)
+        .toList();
+
+    // Wait for all Redis events to complete
+    try {
+      Flux.merge(redisPublishes).then().block();
+    } catch (Exception e) {
+      log.error("One or more Redis publishes failed: {}", e.getMessage(), e);
+      throw e;
+    }
+
+    for (var record : records) {
       committer.markProcessed(record);
     }
     committer.markBatchFinished();
