@@ -9,6 +9,12 @@
 Outboxer Proxima is a robust, production-ready service for implementing the [Transactional Outbox Pattern](https://microservices.io/patterns/data/transactional-outbox.html) in Java.  
 It captures changes from a PostgreSQL outbox table using [Debezium Engine](https://debezium.io/) and reliably publishes events to Kafka, RabbitMQ or Redis, enabling event-driven microservices architectures.
 
+>**Note:**
+This project is a fork of Georg Schwarz's [outboxer-postgres2rabbitmq](https://github.com/jvalue/outboxer-postgres2rabbitmq).
+While the original repository was built using Maven and relied on an older version of Debezium, this fork has been updated to use Gradle and the latest stable release of the [Debezium Engine](https://debezium.io/).
+Additionally, support has been extended to include `Redis` and `Kafka` consumers alongside `RabbitMQ`.
+Feel free to use and adapt this project under the terms of the license.
+
 ---
 
 ## Table of Contents
@@ -61,8 +67,10 @@ Ensure that PostgreSQL, RabbitMQ (or Redis), and Java are installed and properly
 ### Build & Run Locally
 
 ```sh
-./mvnw clean package
+./gradlew clean build  --refresh-dependencies   
 java -jar target/outboxer-proxima-*.jar
+
+./gradlew :app:run (for debug)
 ```
 
 ---
