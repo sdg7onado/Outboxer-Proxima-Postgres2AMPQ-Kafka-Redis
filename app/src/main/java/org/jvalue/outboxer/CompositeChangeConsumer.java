@@ -65,9 +65,9 @@ public class CompositeChangeConsumer implements DebeziumEngine.ChangeConsumer<Ch
     // }
 
     for (var record : records) {
-      committer.markProcessed(record);
+      //committer.markProcessed(record);
     }
-    committer.markBatchFinished();
+    //committer.markBatchFinished();
   }
 
   @Override

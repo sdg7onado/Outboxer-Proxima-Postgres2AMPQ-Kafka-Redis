@@ -61,12 +61,17 @@ public class Outboxer {
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    try (DebeziumEngine<ChangeEvent<String, String>> engine = DebeziumEngine.create(
-        KeyValueHeaderChangeEventFormat.of(Json.class, Json.class, Json.class),
-        "io.debezium.embedded.async.ConvertingAsyncEngineBuilderFactory")
-        .using(config.asProperties())
-        .notifying(compositeConsumer)
-        .build()) {
+    try {
+      engine = DebeziumEngine.create(
+          KeyValueHeaderChangeEventFormat.of(Json.class, Json.class, Json.class),
+          "io.debezium.embedded.async.ConvertingAsyncEngineBuilderFactory")
+          .using(config.asProperties())
+          .notifying(
+              // compositeConsumer
+              record -> {
+                System.out.println("Key = '" + record.key() + "' value = '" + record.value() + "'");
+              })
+          .build();
 
       executor.submit(() -> {
         try {
