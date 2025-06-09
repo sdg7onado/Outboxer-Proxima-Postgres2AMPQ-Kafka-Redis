@@ -56,6 +56,24 @@ public class RedisPublisher implements Closeable {
         });
   }
 
+  public Mono<Void> persistData(ChangeEvent<String, String> record) {
+    String eventId = record.key();
+    String payload = record.value();
+
+    return redisManager.getReactiveCommands().set(eventId, payload)
+        .doOnNext(res -> log.info("Stored event {} with result {}", eventId, res))
+        .then()
+        .retryWhen(Retry.fixedDelay(retries, Duration.ofMillis(retryDelayMs))
+            .doBeforeRetry(
+                sig -> log.warn("Retrying persist for event {} attempt {}", eventId, sig.totalRetries() + 1)))
+        .onErrorResume(e -> {
+          log.error("Storing to Redis failed for event {}, sending to dead-letter", eventId, e);
+          return redisManager.getReactiveCommands().set("dead-letter:" + eventId, payload)
+              .doOnNext(x -> log.info("Sent event {} to dead-letter key", eventId))
+              .then();
+        });
+  }
+
   @Override
   public void close() throws IOException {
     if (redisManager != null) {
