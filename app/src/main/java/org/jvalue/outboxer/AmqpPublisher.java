@@ -28,17 +28,20 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<ChangeEvent<
 
   private static final String AMQP_URL_CONFIG_NAME = "amqp.url";
   private static final String AMQP_EXCHANGE_CONFIG_NAME = "amqp.exchange";
+  private static final String AMQP_ROUTINGKEY_PREFIX = "amqp.routingkey.prefix";
   private static final String AMQP_RETRIES_CONFIG_NAME = "amqp.retries";
   private static final String AMQP_RETRY_DELAY_MS_CONFIG_NAME = "amqp.retry.delay.ms";
 
   private CachingConnectionFactory connectionFactory;
   private AmqpTemplate template;
   private String exchange;
+  private String routingKeyPrefix;
   private int retries;
   private long retryDelayMs;
 
   public void init(Properties config) {
-    this.exchange = config.getProperty(AMQP_EXCHANGE_CONFIG_NAME);
+    this.exchange = config.getProperty(AMQP_EXCHANGE_CONFIG_NAME, "Proxima-Debezium-Exchange");
+    this.routingKeyPrefix = config.getProperty(AMQP_ROUTINGKEY_PREFIX, "Proxima.");
     this.retries = Integer.parseInt(config.getProperty(AMQP_RETRIES_CONFIG_NAME, "5"));
     this.retryDelayMs = Long.parseLong(config.getProperty(AMQP_RETRY_DELAY_MS_CONFIG_NAME, "1000"));
     this.connectionFactory = new CachingConnectionFactory(URI.create(config.getProperty(AMQP_URL_CONFIG_NAME)));
@@ -51,13 +54,11 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<ChangeEvent<
       throws InterruptedException {
     for (var record : records) {
       publishEvent(record);
-      //committer.markProcessed(record);
     }
-    //committer.markBatchFinished();
   }
 
   void publishEvent(ChangeEvent<String, String> record) {
-    var routingKey = record.destination(); // Use destination() instead of topic()
+    var routingKey = routingKeyPrefix + record.destination(); // Use destination() instead of topic()
     var eventId = record.key();
     var payload = record.value();
 

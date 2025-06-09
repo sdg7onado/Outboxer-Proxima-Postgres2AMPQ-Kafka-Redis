@@ -1,7 +1,6 @@
 package org.jvalue.outboxer;
 
 import io.debezium.config.Configuration;
-import io.debezium.embedded.async.AsyncEmbeddedEngine;
 import io.debezium.engine.format.Json;
 import io.debezium.engine.format.KeyValueHeaderChangeEventFormat;
 import io.debezium.engine.ChangeEvent;
@@ -66,13 +65,7 @@ public class Outboxer {
           KeyValueHeaderChangeEventFormat.of(Json.class, Json.class, Json.class),
           "io.debezium.embedded.async.ConvertingAsyncEngineBuilderFactory")
           .using(config.asProperties())
-          .notifying(
-              compositeConsumer
-          // record -> {
-          // System.out.println("Key = '" + record.key() + "' value = '" + record.value()
-          // + "'");
-          // }
-          )
+          .notifying(compositeConsumer)
           .build();
 
       executor.submit(() -> {
@@ -83,9 +76,6 @@ public class Outboxer {
           ex.printStackTrace();
         }
       });
-
-      // Keep main thread alive (optional, based on use case)
-      // new CountDownLatch(1).await();
 
     } catch (Exception e) {
       e.printStackTrace();
