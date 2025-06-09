@@ -67,10 +67,12 @@ public class Outboxer {
           "io.debezium.embedded.async.ConvertingAsyncEngineBuilderFactory")
           .using(config.asProperties())
           .notifying(
-              // compositeConsumer
-              record -> {
-                System.out.println("Key = '" + record.key() + "' value = '" + record.value() + "'");
-              })
+              compositeConsumer
+          // record -> {
+          // System.out.println("Key = '" + record.key() + "' value = '" + record.value()
+          // + "'");
+          // }
+          )
           .build();
 
       executor.submit(() -> {

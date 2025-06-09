@@ -20,6 +20,7 @@ Feel free to use and adapt this project under the terms of the license.
 ## Table of Contents
 
 - [Features](#features)
+- [Usage](#usage)
 - [Architecture](#architecture)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
@@ -196,6 +197,14 @@ outboxer-proxima-postgres-rabbitmq-redis/
   - Docker (for containerized deployment)
   - Running PostgreSQL instance
   - RabbitMQ or Redis instance
+
+### Compatibility Matrix
+To avoid issues conflicts between your Debezium version and the Kafka Connect API, refer to the following matrix
+```
+Debezium 3.1.1.Final → Kafka Connect 3.0.x - 3.1.x
+Debezium 2.7.3.Final → Kafka Connect 3.7.x - 3.8.x
+Debezium 2.6.x → Kafka Connect 3.6.x - 3.7.x
+```
 
 ### Configuration
 Outboxer can be configured via an ```outboxer.properties``` file or environment variables.
