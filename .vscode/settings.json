@@ -7,5 +7,8 @@
   "java.project.sourcePaths": [
     "app/src/main/java"
   ],
-  "java.debug.settings.onBuildFailureProceed": true
+  "java.debug.settings.onBuildFailureProceed": true,
+  "editor.insertSpaces": false,
+  "editor.tabSize": 5,
+  "editor.detectIndentation": false
 }

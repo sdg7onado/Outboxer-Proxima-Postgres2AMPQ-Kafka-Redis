@@ -29,15 +29,9 @@ public class CompositeChangeConsumer implements DebeziumEngine.ChangeConsumer<Ch
       DebeziumEngine.RecordCommitter<ChangeEvent<String, String>> committer)
       throws InterruptedException {
 
-    for (var record : records) {
-      log.info("Processing record: {}", record);
-      committer.markProcessed(record);
-    }
-    committer.markBatchFinished();
-
     // Publish to AMQP
     try {
-      //amqpPublisher.handleBatch(records, committer);
+      amqpPublisher.handleBatch(records, committer);
     } catch (Exception e) {
       log.error("Failed to publish to AMQP: {}", e.getMessage());
       throw e; // Rethrow to fail fast; adjust based on your error handling policy

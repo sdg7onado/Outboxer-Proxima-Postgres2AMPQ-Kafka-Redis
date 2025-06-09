@@ -2,7 +2,7 @@
 azure-appconfiguration = "1.8.0"
 azure-identity = "1.11.1"
 azure-keyvault = "4.6.4"
-kafka = "4.0.0"
+kafka = "3.1.2"  # Changed from 4.0.0 to 3.1.2
 slf4j = "2.1.0-alpha1"
 slf4j-simple = "2.1.0-alpha1"
 lombok = "1.18.38"
