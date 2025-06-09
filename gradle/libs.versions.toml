@@ -1,4 +1,7 @@
 [versions]
+azure-appconfiguration = "1.8.0"
+azure-identity = "1.11.1"
+azure-keyvault = "4.6.4"
 kafka = "4.0.0"
 slf4j = "2.1.0-alpha1"
 slf4j-simple = "2.1.0-alpha1"
@@ -11,6 +14,9 @@ lettuce = "6.7.0.RELEASE"
 reactor = "3.7.6"
 
 [libraries]
+azure-appconfiguration = { module = "com.azure:azure-data-appconfiguration", version.ref = "azure-appconfiguration" }
+azure-identity = { module = "com.azure:azure-identity", version.ref = "azure-identity" }
+azure-keyvault = { module = "com.azure:azure-security-keyvault-secrets", version.ref = "azure-keyvault" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j-simple" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }

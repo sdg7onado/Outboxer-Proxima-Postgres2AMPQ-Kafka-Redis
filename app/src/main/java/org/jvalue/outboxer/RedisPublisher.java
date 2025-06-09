@@ -28,16 +28,14 @@ public class RedisPublisher implements Closeable {
   private long retryDelayMs;
 
   public void init(Properties config) {
-    String redisUrl = config.getProperty(REDIS_URL_CONFIG_NAME, "redis://127.0.0.1:6379");
+    String redisUrl = config.getProperty(REDIS_URL_CONFIG_NAME, "redis://127.0.0.1");
     int redisPort = Integer.parseInt((config.getProperty("redis.port", "6379")));
     this.channel = config.getProperty(REDIS_CHANNEL_CONFIG_NAME, "debezium.events");
     this.deadLetterChannel = channel + ".deadletter";
     this.retries = Integer.parseInt(config.getProperty(REDIS_RETRIES_CONFIG_NAME, "5"));
     this.retryDelayMs = Long.parseLong(config.getProperty(REDIS_RETRY_DELAY_MS_CONFIG_NAME, "1000"));
 
-    RedisURI redisUri = new RedisURI(redisUrl, redisPort, Duration.ofSeconds(60));
-
-    this.redisManager = new ReactiveRedisConnectionManager(redisUri.toString());
+    this.redisManager = new ReactiveRedisConnectionManager(redisUrl, redisPort);
   }
 
   public Mono<Void> publishEvent(ChangeEvent<String, String> record) {

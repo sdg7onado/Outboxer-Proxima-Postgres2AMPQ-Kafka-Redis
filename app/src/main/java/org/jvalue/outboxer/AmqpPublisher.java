@@ -51,9 +51,9 @@ public class AmqpPublisher implements DebeziumEngine.ChangeConsumer<ChangeEvent<
       throws InterruptedException {
     for (var record : records) {
       publishEvent(record);
-      committer.markProcessed(record);
+      //committer.markProcessed(record);
     }
-    committer.markBatchFinished();
+    //committer.markBatchFinished();
   }
 
   void publishEvent(ChangeEvent<String, String> record) {

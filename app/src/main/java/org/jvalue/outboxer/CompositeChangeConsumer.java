@@ -1,8 +1,5 @@
 package org.jvalue.outboxer;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -15,52 +12,57 @@ import java.util.Properties;
 @Slf4j
 public class CompositeChangeConsumer implements DebeziumEngine.ChangeConsumer<ChangeEvent<String, String>>, Closeable {
   private final AmqpPublisher amqpPublisher;
-  private final RedisPublisher redisPublisher;
-  private final KafkaPublisher kafkaPublisher;
+  // private final RedisPublisher redisPublisher;
+  // private final KafkaPublisher kafkaPublisher;
 
   public CompositeChangeConsumer(Properties config) {
     this.amqpPublisher = new AmqpPublisher();
-    this.redisPublisher = new RedisPublisher();
-    this.kafkaPublisher = new KafkaPublisher();
+    // this.redisPublisher = new RedisPublisher();
+    // this.kafkaPublisher = new KafkaPublisher();
     this.amqpPublisher.init(config);
-    this.redisPublisher.init(config);
-    this.kafkaPublisher.init(config);
+    // this.redisPublisher.init(config);
+    // this.kafkaPublisher.init(config);
   }
 
   @Override
   public void handleBatch(List<ChangeEvent<String, String>> records,
       DebeziumEngine.RecordCommitter<ChangeEvent<String, String>> committer)
       throws InterruptedException {
+
     for (var record : records) {
-      // Publish to AMQP
-      try {
-        amqpPublisher.publishEvent(record);
-      } catch (Exception e) {
-        log.error("Failed to publish to AMQP: {}", e.getMessage());
-        throw e; // Rethrow to fail fast; adjust based on your error handling policy
-      }
-
-      // Publish to Kafka
-      try {
-        kafkaPublisher.publishEvent(record);
-      } catch (Exception e) {
-        log.error("Failed to publish to Kafka: {}", e.getMessage());
-        throw e;
-      }
+      log.info("Processing record: {}", record);
+      committer.markProcessed(record);
     }
+    committer.markBatchFinished();
 
-    // Collect all Redis publish calls
-    List<Mono<Void>> redisPublishes = records.stream()
-        .map(redisPublisher::publishEvent)
-        .toList();
-
-    // Wait for all Redis events to complete
+    // Publish to AMQP
     try {
-      Flux.merge(redisPublishes).then().block();
+      //amqpPublisher.handleBatch(records, committer);
     } catch (Exception e) {
-      log.error("One or more Redis publishes failed: {}", e.getMessage(), e);
-      throw e;
+      log.error("Failed to publish to AMQP: {}", e.getMessage());
+      throw e; // Rethrow to fail fast; adjust based on your error handling policy
     }
+
+    // // Publish to Kafka
+    // try {
+    // kafkaPublisher.publishEvent(record);
+    // } catch (Exception e) {
+    // log.error("Failed to publish to Kafka: {}", e.getMessage());
+    // throw e;
+    // }
+
+    // // Collect all Redis publish calls
+    // List<Mono<Void>> redisPublishes = records.stream()
+    // .map(redisPublisher::publishEvent)
+    // .toList();
+
+    // // Wait for all Redis events to complete
+    // try {
+    // Flux.merge(redisPublishes).then().block();
+    // } catch (Exception e) {
+    // log.error("One or more Redis publishes failed: {}", e.getMessage(), e);
+    // throw e;
+    // }
 
     for (var record : records) {
       committer.markProcessed(record);
@@ -76,7 +78,7 @@ public class CompositeChangeConsumer implements DebeziumEngine.ChangeConsumer<Ch
   @Override
   public void close() throws IOException {
     amqpPublisher.close();
-    redisPublisher.close();
-    kafkaPublisher.close();
+    // redisPublisher.close();
+    // kafkaPublisher.close();
   }
 }

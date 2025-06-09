@@ -1,7 +1,9 @@
 package org.jvalue.outboxer;
 
 import io.debezium.config.Configuration;
+import io.debezium.embedded.async.AsyncEmbeddedEngine;
 import io.debezium.engine.format.Json;
+import io.debezium.engine.format.KeyValueHeaderChangeEventFormat;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,10 @@ public class Outboxer {
   private ExecutorService executorService;
 
   public void init() {
+
+    deleteIfExists("offsets.dat");
+    deleteIfExists("schema-history.dat");
+
     config = ConfigHelper.fromResource(DEFAULT_CONFIG_FILE)
         .edit()
         .apply(ConfigHelper.fromEnvVar(ENV_VAR_PREFIX))
@@ -53,20 +59,31 @@ public class Outboxer {
       throw new IllegalStateException("Outboxer is not initialized.");
     }
 
-    try (DebeziumEngine<ChangeEvent<String, String>> engine = DebeziumEngine.create(Json.class)
-        .using(config.asProperties())
-        .notifying(
-            compositeConsumer)
-        .build()) {
-      ExecutorService executor = Executors.newSingleThreadExecutor();
-      executor.execute(engine);
+    ExecutorService executor = Executors.newSingleThreadExecutor();
 
-      // Wait for some time or a signal
-      // Thread.sleep(60000);
-      // executor.shutdown();
+    try (DebeziumEngine<ChangeEvent<String, String>> engine = DebeziumEngine.create(
+        KeyValueHeaderChangeEventFormat.of(Json.class, Json.class, Json.class),
+        "io.debezium.embedded.async.ConvertingAsyncEngineBuilderFactory")
+        .using(config.asProperties())
+        .notifying(compositeConsumer)
+        .build()) {
+
+      executor.submit(() -> {
+        try {
+          engine.run();
+        } catch (Exception ex) {
+          System.err.println("Engine failed: " + ex.getMessage());
+          ex.printStackTrace();
+        }
+      });
+
+      // Keep main thread alive (optional, based on use case)
+      // new CountDownLatch(1).await();
+
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
+      executor.shutdown();
       try {
         compositeConsumer.close();
       } catch (Exception e) {
@@ -94,6 +111,15 @@ public class Outboxer {
         compositeConsumer.close();
       } catch (IOException ignore) {
       }
+    }
+  }
+
+  private static void deleteIfExists(String filename) {
+    try {
+      Files.deleteIfExists(Paths.get(filename));
+      System.out.println("Deleted: " + filename);
+    } catch (IOException e) {
+      System.err.println("Error deleting " + filename + ": " + e.getMessage());
     }
   }
 }
