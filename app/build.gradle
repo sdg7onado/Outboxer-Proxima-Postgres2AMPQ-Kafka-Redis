@@ -22,6 +22,11 @@ repositories {
 }
 
 dependencies {
+    // Azure
+    implementation libs.azure.appconfiguration
+    implementation libs.azure.identity
+    implementation libs.azure.keyvault
+
     // Spring AMQP (includes both core and rabbit)
     implementation libs.spring.amqp
     implementation libs.spring.rabbit
