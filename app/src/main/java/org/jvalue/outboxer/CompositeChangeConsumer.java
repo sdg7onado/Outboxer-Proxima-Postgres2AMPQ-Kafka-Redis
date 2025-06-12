@@ -54,8 +54,8 @@ public class CompositeChangeConsumer implements DebeziumEngine.ChangeConsumer<Ch
     }
 
     // Optional committer logic
-    // for (var record : records) committer.markProcessed(record);
-    // committer.markBatchFinished();
+    for (var record : records) committer.markProcessed(record);
+    committer.markBatchFinished();
   }
 
   private void executeSafely(String name, ThrowingRunnable action) throws InterruptedException {
