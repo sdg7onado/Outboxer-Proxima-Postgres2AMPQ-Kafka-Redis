@@ -66,46 +66,15 @@ public class KafkaPublisher implements DebeziumEngine.ChangeConsumer<ChangeEvent
     for (var record : records) {
       try {
         publishEvent(record);
-        //committer.markProcessed(record);
+        // committer.markProcessed(record);
       } catch (Exception e) {
         log.error("Failed to publish record {}: {}", record.key(), e.getMessage(), e);
         failedEvents.incrementAndGet();
       }
     }
-    //committer.markBatchFinished();
+    // committer.markBatchFinished();
     log.info("Metrics -- Total: {}, Failed: {}, Retries: {}", totalEvents.get(), failedEvents.get(), retryCount.get());
   }
-
-  /*
-   * void publishEvent(ChangeEvent<String, String> record) {
-   * String routingKey = record.destination();
-   * String eventId = record.key();
-   * String payload = record.value();
-   *
-   * log.info("Publishing to Kafka event {} with topic {} and payload {}",
-   * eventId, routingKey, payload);
-   *
-   * ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic,
-   * eventId, payload);
-   *
-   * for (int i = 0; i <= retries; i++) {
-   * try {
-   * producer.send(producerRecord).get(); // Synchronous send for simplicity
-   * return;
-   * } catch (Exception e) {
-   * if (i >= retries) {
-   * throw new RuntimeException("Could not publish event to Kafka after " +
-   * retries + " retries", e);
-   * }
-   * try {
-   * Thread.sleep(retryDelayMs);
-   * } catch (InterruptedException ignore) {
-   * // Ignore
-   * }
-   * }
-   * }
-   * }
-   */
 
   public void publishEvent(ChangeEvent<String, String> record) {
     String key = record.key();
