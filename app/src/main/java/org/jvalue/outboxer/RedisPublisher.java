@@ -4,8 +4,13 @@ import io.debezium.engine.ChangeEvent;
 import io.lettuce.core.RedisURI;
 import lombok.extern.slf4j.Slf4j;
 import org.jvalue.outboxer.util.ReactiveRedisConnectionManager;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuples;
 import reactor.util.retry.Retry;
 
 import java.io.Closeable;
@@ -56,23 +61,59 @@ public class RedisPublisher implements Closeable {
         });
   }
 
-  public Mono<Void> persistData(ChangeEvent<String, String> record) {
-    String eventId = record.key();
-    String payload = record.value();
+  // public Mono<Void> persistData(ChangeEvent<String, String> record) {
+  //   String eventId = record.key();
 
-    return redisManager.getReactiveCommands().set(eventId, payload)
-        .doOnNext(res -> log.info("Stored event {} with result {}", eventId, res))
-        .then()
-        .retryWhen(Retry.fixedDelay(retries, Duration.ofMillis(retryDelayMs))
-            .doBeforeRetry(
-                sig -> log.warn("Retrying persist for event {} attempt {}", eventId, sig.totalRetries() + 1)))
-        .onErrorResume(e -> {
-          log.error("Storing to Redis failed for event {}, sending to dead-letter", eventId, e);
-          return redisManager.getReactiveCommands().set("dead-letter:" + eventId, payload)
-              .doOnNext(x -> log.info("Sent event {} to dead-letter key", eventId))
-              .then();
-        });
-  }
+  //   return Mono.fromCallable(() -> {
+  //     JsonNode root = new ObjectMapper().readTree(record.value());
+  //     return root.get("payload").asText();
+  //   })
+  //       .flatMap(payload -> redisManager.getReactiveCommands().set(eventId, payload)
+  //           .doOnNext(res -> log.info("Stored event {} with result {}", eventId, res))
+  //           .then()
+  //           .retryWhen(Retry.fixedDelay(retries, Duration.ofMillis(retryDelayMs))
+  //               .doBeforeRetry(
+  //                   sig -> log.warn("Retrying persist for event {} attempt {}", eventId, sig.totalRetries() + 1)))
+  //           .onErrorResume(e -> {
+  //             log.error("Storing to Redis failed for event {}, sending to dead-letter", eventId, e);
+  //             return redisManager.getReactiveCommands().set("dead-letter:" + eventId, payload)
+  //                 .doOnNext(x -> log.info("Sent event {} to dead-letter key", eventId))
+  //                 .then();
+  //           }));
+  // }
+
+  public Mono<Void> persistData(ChangeEvent<String, String> record) {
+    return Mono.fromCallable(() -> {
+        ObjectMapper mapper = new ObjectMapper();
+
+        // Extract eventId from key payload
+        JsonNode keyNode = mapper.readTree(record.key());
+        String eventId = keyNode.get("payload").asText();
+
+        // Extract JSON payload from value payload
+        JsonNode valueNode = mapper.readTree(record.value());
+        String payloadJson = valueNode.get("payload").asText(); // still a JSON string
+
+        return Tuples.of(eventId, payloadJson);
+    })
+    .flatMap(tuple -> {
+        String eventId = tuple.getT1();
+        String payloadJson = tuple.getT2();
+
+        return redisManager.getReactiveCommands().set(eventId, payloadJson)
+            .doOnNext(res -> log.info("Stored event {} with result {}", eventId, res))
+            .then()
+            .retryWhen(Retry.fixedDelay(retries, Duration.ofMillis(retryDelayMs))
+                .doBeforeRetry(sig -> log.warn("Retrying persist for event {} attempt {}", eventId, sig.totalRetries() + 1)))
+            .onErrorResume(e -> {
+                log.error("Storing to Redis failed for event {}, sending to dead-letter", eventId, e);
+                return redisManager.getReactiveCommands().set("dead-letter:" + eventId, payloadJson)
+                    .doOnNext(x -> log.info("Sent event {} to dead-letter key", eventId))
+                    .then();
+            });
+    });
+}
+
 
   @Override
   public void close() throws IOException {

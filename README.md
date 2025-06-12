@@ -103,15 +103,33 @@ Outboxer can be configured via a `outboxer.properties` file or environment varia
   file does survive container restarts. Path to file where offsets are to be stored. Required when offset.storage is set to the <…​>.FileOffsetBackingStore.
 - `offset.flush.interval.ms` Interval at which to try committing offsets. The default is 1 minute.
 
-**Publisher Properties**
-- `publisher.type` The type of publisher: `rabbitmq`, `kafka`, or `redis`
-- `publisher.amqp.url` The url to the AMQP broker
-- `publisher.amqp.exchange` The AMQP exchange on which the events should be published.
-- `publisher.kafka.bootstrap.servers` The Kafka bootstrap servers (if using Kafka)
-- `publisher.amqp.retries` How often a failed event publication should be retried
-- `publisher.amqp.retry.delay` The delay before performing retry
-- `publisher.redis.host` Redis host (if using Redis)
-- `publisher.redis.port` Redis port
+ **Publisher Properties**
+
+  *AMQP/RabbitMq Configuration*
+  ```
+  publisher.amqp.url=amqp://debezium:debezium@localhost:5672
+  publisher.amqp.exchange=Proxima-Debezium-Exchange
+  publisher.amqp.routingkey.prefix=Proxima.
+  publisher.amqp.retries=5
+  publisher.amqp.retry.delay.ms=5000
+  publisher.amqp.connection.timeout.ms=30000
+  publisher.amqp.heartbeat.interval.ms=60000
+  ```
+
+  *Redis Configuration*
+  ```
+  publisher.type=redis
+  publisher.redis.host=localhost
+  publisher.redis.port=6379
+  ```
+
+  *Kafka Configuration*
+```
+publisher.kafka.bootstrap.servers=kafka:9092
+publisher.kafka.topic=proxima_outbox
+publisher.kafka.retries=5
+publisher.kafka.retry.delay.ms=5000
+```
 
 **Transformer Properties**
 - `transforms.outbox.table.field.event.Id` The name of the column containing the unique event id
@@ -196,7 +214,7 @@ outboxer-proxima-postgres-rabbitmq-redis/
   - Gradle 7+
   - Docker (for containerized deployment)
   - Running PostgreSQL instance
-  - RabbitMQ or Redis instance
+  - Apache Kafka, RabbitMQ and Redis instance
 
 ### Compatibility Matrix
 To avoid issues conflicts between your Debezium version and the Kafka Connect API, refer to the following matrix

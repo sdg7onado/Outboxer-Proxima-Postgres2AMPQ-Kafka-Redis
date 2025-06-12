@@ -11,20 +11,27 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
+//import org.apache.kafka.common.utils.Utils.ThrowingRunnable;
+
+@FunctionalInterface
+interface ThrowingRunnable {
+  void run() throws Exception;
+}
+
 @Slf4j
 public class CompositeChangeConsumer implements DebeziumEngine.ChangeConsumer<ChangeEvent<String, String>>, Closeable {
-  private final AmqpPublisher amqpPublisher;
-  private final RedisPublisher redisPublisher;
-  private final KafkaPublisher kafkaPublisher;
+  private final AmqpPublisher amqpPublisher = new AmqpPublisher();
+  private final RedisPublisher redisPublisher = new RedisPublisher();
+  private final KafkaPublisher kafkaPublisher = new KafkaPublisher();
 
   public CompositeChangeConsumer(Properties config) {
-    this.amqpPublisher = new AmqpPublisher();
-    this.redisPublisher = new RedisPublisher();
-    this.kafkaPublisher = new KafkaPublisher();
+    initAll(config);
+  }
 
-    this.amqpPublisher.init(config);
-    this.redisPublisher.init(config);
-    this.kafkaPublisher.init(config);
+  private void initAll(Properties config) {
+    amqpPublisher.init(config);
+    redisPublisher.init(config);
+    kafkaPublisher.init(config);
   }
 
   @Override
@@ -32,40 +39,36 @@ public class CompositeChangeConsumer implements DebeziumEngine.ChangeConsumer<Ch
       DebeziumEngine.RecordCommitter<ChangeEvent<String, String>> committer)
       throws InterruptedException {
 
-    // Publish to AMQP
-    try {
-      amqpPublisher.handleBatch(records, committer);
-    } catch (Exception e) {
-      log.error("Failed to publish to AMQP: {}", e.getMessage());
-      throw e; // Rethrow to fail fast; adjust based on your error handling policy
-    }
+    executeSafely("AMQP", () -> amqpPublisher.handleBatch(records, committer));
+    executeSafely("Kafka", () -> kafkaPublisher.handleBatch(records, committer));
 
-    // Publish to Kafka
     try {
-      kafkaPublisher.handleBatch(records, committer);
-    } catch (Exception e) {
-      log.error("Failed to publish to Kafka: {}", e.getMessage());
-      throw e;
-    }
-
-    // Collect all Redis publish calls
-    List<Mono<Void>> redisPublishes = records.stream()
-        // .map(redisPublisher::publishEvent)
-        .map(redisPublisher::persistData)
-        .toList();
-
-    // Wait for all Redis events to complete
-    try {
-      Flux.merge(redisPublishes).then().block();
+      Flux.merge(
+          records.stream()
+              .map(redisPublisher::persistData)
+              .toList())
+          .then().block();
     } catch (Exception e) {
       log.error("One or more Redis publishes failed: {}", e.getMessage(), e);
       throw e;
     }
 
-    for (var record : records) {
-      // committer.markProcessed(record);
-    }
+    // Optional committer logic
+    // for (var record : records) committer.markProcessed(record);
     // committer.markBatchFinished();
+  }
+
+  private void executeSafely(String name, ThrowingRunnable action) throws InterruptedException {
+    try {
+      action.run();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt(); // restore interrupt status
+      log.error("Interrupted while publishing to {}: {}", name, e.getMessage(), e);
+      throw e;
+    } catch (Exception e) {
+      log.error("Failed to publish to {}: {}", name, e.getMessage(), e);
+      throw new RuntimeException(e); // or handle as per your policy
+    }
   }
 
   @Override
